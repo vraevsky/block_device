@@ -1,0 +1,10 @@
+#!/bin/bash
+
+BLOCK_DEVICE=${BLOCK_DEVICE:-/dev/mmcblk2p2}
+[[ -b ${BLOCK_DEVICE} ]] || exit 2
+
+cat <<< "Performance test to device ..."
+dd if=/dev/zero of=${BLOCK_DEVICE} bs=1M oflag=dsync status=progress
+
+cat <<< "Performance test from device ..."
+dd of=/dev/null if=${BLOCK_DEVICE} bs=1M oflag=dsync status=progress

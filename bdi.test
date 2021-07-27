@@ -1,0 +1,29 @@
+#!/bin/bash
+
+PATTERN=/tmp/test.urandom
+
+BLOCK_DEVICE=${BLOCK_DEVICE:-/dev/mmcblk2p2}
+[[ -b ${BLOCK_DEVICE} ]] || exit 2
+
+BD=$(basename ${BLOCK_DEVICE})
+
+# in blocks
+PATTERN_SIZE=${PATTERN_SIZE:-2048}
+BS=$((${PATTERN_SIZE}<<9))
+
+loops=$(echo $(cat /sys/class/block/${BD}/size)/${PATTERN_SIZE}-1 | bc)
+LOOPS=${LOOPS:-${loops}}
+[[ ${LOOPS} -gt ${loops} ]] && LOOPS=${loops}
+
+# create a pattern file
+dd if=/dev/urandom of=${PATTERN} bs=${BS} count=1 2>/dev/null
+
+cat << eof
+Sample pattern md5sum = $(md5sum ${PATTERN})
+eof
+
+# write/verify test
+for i in $(seq 0 ${LOOPS});do
+dd of=/dev/${BD} if=${PATTERN} bs=${BS} count=1 seek=${i} 2>/dev/null
+dd if=/dev/${BD} bs=${BS} count=1 skip=${i} 2>/dev/null | md5sum
+done
