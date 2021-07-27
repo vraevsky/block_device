@@ -15,7 +15,7 @@ All the md5sup patterns must be the same
 ```
 LOOPS=128 PATTERN_SIZE=2048 BLOCK_DEVICE=/dev/mmcblk2p2 ./bdi.test
 ```
-* Test the entire media with the pattern size of 16M
+* Test the entire media with the pattern size of 16 mega
 ```
 PATTERN_SIZE=$((2048*16)) BLOCK_DEVICE=/dev/mmcblk2p2 ./bdi.test
 ```
