@@ -16,7 +16,7 @@ LOOPS=${LOOPS:-${loops}}
 [[ ${LOOPS} -gt ${loops} ]] && LOOPS=${loops}
 
 # create a pattern file
-dd if=/dev/urandom of=${PATTERN} bs=${BS} count=1 2>/dev/null
+dd if=/dev/urandom of=${PATTERN} bs=${BS} count=1 iflag=fullblock 2>/dev/null
 
 cat << eof
 Sample pattern md5sum = $(md5sum ${PATTERN})
