@@ -1,0 +1,41 @@
+#!/bin/bash
+
+get_offset() {
+BLOCK_DEVICE=${BLOCK_DEVICE:-/dev/dummy}
+[[ -b ${BLOCK_DEVICE} ]] || exit 2
+
+BD=$(basename ${BLOCK_DEVICE})
+[[ ${BD:0:3} = 'mmc' ]] && d=p || d=''
+
+_p=0;
+_s=0;
+
+for i in $(seq 1 10);do
+if [[ -d /sys/class/block/${BD}${d}${i} ]];then
+	size=$(cat /sys/class/block/${BD}${d}${i}/size);
+	start=$(cat /sys/class/block/${BD}${d}${i}/start);
+	_ss=$(( ${start} + ${size} ))
+	if [[ ${_ss} -gt ${_s} ]];then
+		_s=${_ss}; _p=${i};
+	fi
+fi
+done;
+
+cat <<< ${_s}
+}
+
+TEST_DEVICE=${TEST_DEVICE:-/dev/null}
+
+if [[ -b ${TEST_DEVICE} ]];then
+	TEST_DEVICE=$(basename ${TEST_DEVICE})
+	sfdisk -d ${BLOCK_DEVICE} | sed "/${TEST_DEVICE}/d" | sfdisk --force ${BLOCK_DEVICE}; partprobe ${BLOCK_DEVICE}
+else
+	OFFSET=$(BLOCK_DEVICE=${BLOCK_DEVICE} get_offset)
+	l=$(sfdisk -d ${BLOCK_DEVICE} |  awk  '(/start/)&&$0=$4$6"0x83"' ; echo "${OFFSET},,0x83")
+sfdisk --force ${BLOCK_DEVICE} << eof
+${l}
+eof
+
+partprobe ${BLOCK_DEVICE}
+export TEST_DEVICE=$(sfdisk -l ${BLOCK_DEVICE} | awk '{dev=$1} END {print dev}')
+fi
